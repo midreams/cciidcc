@@ -1,3 +1,4 @@
+######################### 软件安装 ###################################################
 #jenkins安装帮助：
 https://www.cnblogs.com/stulzq/p/9291237.html
 #各个版本地址：
@@ -24,3 +25,48 @@ https://get.jenkins.io/redhat/
   #如果端口有冲突
   vim /etc/sysconfig/jenkins
   JENKINS_PORT="8088"
+#登录 ip+端口
+#得到授权码
+cat /var/lib/jenkins/secrets/initialAdminPasswor
+
+
+
+######################### docker安装 ###################################################
+# 本例子使用 docker-compose 来管理安装
+# 安装最新docker-ce
+   yum-config-manager --add-repo  http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+   yum -y install docker-ce
+#启动
+   systemctl start docker && systemctl enable docker
+#安装docker-compse  测试版本为 1.26.2
+   curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+   chmod +x /usr/local/bin/docker-compose
+   ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+#新建数据持久化目录
+   mkdir -p /date/jenkins_home/
+#对数据持久化目录授权 这是应为docker内部的运行权限是1000：1000
+   chown -R 1000:1000 /data/jenkins_home
+#新建docker-compose文件
+   cd /date
+   vim docker-compose.yaml
+#------- 文件模板 end 开始------------------------------#   
+version: '3'
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    privileged: true  #允许特权
+    restart: always
+    ports:
+      - '8080:8080'
+      - '50000:50000'
+    volumes:
+      - '/date/jenkins_home:/var/jenkins_home'
+#------- 文件模板 end------------------------------#      
+#运行 
+ docker-compose -f docker-compose.yaml  up -d . 
+
+#登录 ip+端口
+#得到授权码
+tail /date/jenkins_home/secrets/initialAdminPassword
+
