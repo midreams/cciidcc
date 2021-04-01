@@ -1,0 +1,26 @@
+#jenkins安装帮助：
+https://www.cnblogs.com/stulzq/p/9291237.html
+#各个版本地址：
+https://get.jenkins.io/redhat/
+#检查java版本  1.8 或者11 以上
+     yum search jdk
+     yum -y install java-1.8.0-openjdk.x86_64     
+#安装java环境
+    yum install -y java-1.8.0-openjdk
+#下载最新版Jenkins  [2021-03-02] 
+    wget https://get.jenkins.io/redhat/jenkins-2.283-1.1.noarch.rpm
+#安装
+    rpm -ivh  jenkins-2.283-1.1.noarch.rpm
+#如果删除旧版本
+     yum -y remove jenkins
+     yum clean all
+     find / -iname jenkins | xargs -n 1000 rm -rf
+
+#jenkins用户加入root组
+   #解决jenkins在调用任务时候遇到的一些权限问题
+   gpasswd -a jenkins root #将用户jenkins加入到root组
+   gpasswd -d jenkins root #将用户jenkins从root组中移出
+#更改端口
+  #如果端口有冲突
+  vim /etc/sysconfig/jenkins
+  JENKINS_PORT="8088"
