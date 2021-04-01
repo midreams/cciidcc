@@ -1,0 +1,16 @@
+################################################  k8s 上   ###############################################################
+#制作 k8s key文件，这里我们选这管理员权限的
+#一般文件位置：/etc/kubernetes/admin.conf  
+#取得文件中的  certificate-authority-data   client-certificate-data client-key-data3个对应的值，并导出
+ echo certificate-authority-data | base64 -d > /opt/ca.crt
+ echo client-certificate-data | base64 -d > /opt/client.crt
+ echo client-key-data | base64 -d > /opt/client.key
+# 这里的 xxx-data换成对应的值
+# 合并生成：client.key
+openssl pkcs12 -export -out cert.pfx -inkey client.key -in client.crt -certfile ca.crt
+# 输入密码，比如：123123  这里要记住
+
+
+################################################  Jenkins 上   ###############################################################
+#1.jenkins 已经添加了 kubernetes 的插件
+#2.jenkins：添加位置 系统管理--> 系统配置 --> Cloud(页面拉到最下面)--> 点击“a separate configuration page”
