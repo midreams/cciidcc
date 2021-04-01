@@ -1,0 +1,5 @@
+#此文件记录 jenkins 在链接k8s 中常见问题
+
+1.Jenkins流水线在调用 k8s创建的  jenkins-node pod 无线重启
+原因：k8s构建的 jenkins-node pod 无法链接到我们此时发起构建任务的 jenkins
+处理：设置-全局安全配置-代理-改成随机端口
