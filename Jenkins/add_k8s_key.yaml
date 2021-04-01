@@ -6,11 +6,32 @@
  echo client-certificate-data | base64 -d > /opt/client.crt
  echo client-key-data | base64 -d > /opt/client.key
 # 这里的 xxx-data换成对应的值
-# 合并生成：client.key
+# 合并生成：cert.pfx
 openssl pkcs12 -export -out cert.pfx -inkey client.key -in client.crt -certfile ca.crt
 # 输入密码，比如：123123  这里要记住
+接下来我们会用到2个文件 cert.pfx 
 
 
 ################################################  Jenkins 上   ###############################################################
-#1.jenkins 已经添加了 kubernetes 的插件
-#2.jenkins：添加位置 系统管理--> 系统配置 --> Cloud(页面拉到最下面)--> 点击“a separate configuration page”
+#01 添加选择 凭据
+  选择-全局凭据- Certificate-上传证书(刚刚准备好的：cert.pfx )-输入密码-填写Key的标识(备注)-添加
+
+#02.jenkins 已经添加了 kubernetes 的插件
+#03.jenkins：添加位置 系统管理--> 系统配置 --> Cloud(页面拉到最下面)--> 点击“a separate configuration page”
+填写一下信息
+  名称：kubernetes    #这个名字和k8s集群中admin.conf文件中clusters 的name参数对应：默认是kubernetes
+  Kubernetes 地址：https://XXX.com:6443/    # 域名或者ip
+  Kubernetes 服务证书 key ：......          #cert.pfx中的内容
+  禁用 HTTPS 证书检查: 如果域名访问证书没问题就不管，有问题就勾上
+  Kubernetes 命名空间：defalut
+  凭据：选择我们 01步中添加的凭据
+  其他可以不改动
+  “链接测试” 出现：Connected to Kubernetes v1.20.5    完成
+  
+  
+
+ 
+
+
+
+
