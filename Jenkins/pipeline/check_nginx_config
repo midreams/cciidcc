@@ -1,0 +1,72 @@
+//# jenkins添加的gitlab-api凭据
+def gitlab_Credentials= "{全局凭据}"
+//#gitlab项目地址
+def git_address_ = "{git项目地址}"
+//单个文件项目地址
+def git_file_path = "https://{域名IP}/api/v4/projects/{项目ID}/repository/files" 
+def this_pipline_name = "{流水线项目名字}"
+
+pipeline {
+    agent {
+        kubernetes {
+
+            yaml '''
+apiVersion: v1
+kind: Pod
+metadata:
+labels:
+  component: ci
+spec:
+  # Use service account that can deploy to all namespaces
+  # serviceAccountName: kube-ops
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+    command:
+    - cat
+    tty: true
+'''     
+        }
+    }
+      parameters {
+       gitParameter branchFilter: 'origin/(.*)', defaultValue: 'master', name: 'BRANCH', type: 'PT_BRANCH' 
+  }
+    stages {
+        stage('Hello') {
+            steps {
+                echo 'Hello World'
+            }
+        }
+        stage("拉取资源"){
+            steps{
+                checkout([$class: 'GitSCM', 
+                     branches: [[name: "${params.BRANCH}"]], 
+                     doGenerateSubmoduleConfigurations: false, 
+                     extensions: [[$class: 'CloneOption', depth: 1, noTags: false, reference: '', shallow: true]],
+                     submoduleCfg: [],
+                     userRemoteConfigs: [[credentialsId: "${gitlab_Credentials}", 
+                     url: "${git_address}"]]])
+            }
+        }
+        stage('Nginx代码检查') {
+            steps {
+                //切换容器
+                container('nginx') {
+                       echo 'Hello World'
+                       script{
+                                sh """ 
+                                   curl --header "PRIVATE-TOKEN:${GITLAB_ACCESS_TOKEN}" $git_file_path/XXX%2Fabc.con.conf/raw?ref=master --output abc.con.conf
+                                   cp /home/jenkins/agent/workspace/${this_pipline_name}/abc.con.conf /etc/nginx/conf.d/
+                                   sleep 60
+                                   nginx -t
+                                   sleep 200   
+                                """ 
+                            
+                              }
+                   
+                }
+            } 
+        }         
+    }
+}
