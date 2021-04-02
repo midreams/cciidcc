@@ -1,0 +1,87 @@
+#####################  k8s-集群-安装帮助文档---###################################################
+1.环境说明
+2.环境准备
+3.安装kubelet，kubeadmin
+4.初始化master
+5.安装flannel
+6.初始化node
+7.安装kuborad
+8.验证
+##################################################################################################
+1.环境说明
+   测试安装平台：Cetnos 7.6
+   Kubernetes ： v1.20.5
+   docker-ce：19.03
+   flannel :v0.13.0
+
+2.环境准备
+   #这里我用3台机器做测试集群，每台都要做一下步骤
+   #2.1 安装必要软件
+     yum -y install vim wget net-tools bash-completion telnet
+   #2.2 配置本地解析
+     10.15.0.1  kk88ss-node-02
+     10.15.0.2  kk88ss-node-01
+     10.15.0.3  kk88ss-master
+     10.15.0.3  kk88ss.k.com
+   #说明：kk88ss-node-X 对应的是机器名 ， kk88ss.k.com 这里是自定义一个域名内部互联，后面初始化会用到
+   #2.3 关闭 SeLinux
+     setenforce 0
+     sed -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config
+   #2.4 关闭 swap
+     swapoff -a
+   #2.5 安装docker  ：version: 19.03
+     yum-config-manager --add-repo  http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+     yum -y install docker-ce-19.03.10
+     /etc/docker/daemon.json
+            {
+              "exec-opts":["native.cgroupdriver=systemd"]
+             }
+     systemctl start docker && systemctl enable dockerv         
+   #2.5 互通测试、
+     如果有防火墙，这检查防火墙
+ 
+ 
+3.安装kubelet，kubeadmin ，kubelet
+   #这里我用3台机器做测试集群，每台都要做一下步骤
+   #3.1 导入yum源
+     cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+     [kubernetes]
+     name=Kubernetes
+     baseurl=http://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64
+     enabled=1
+     gpgcheck=0
+     repo_gpgcheck=0
+     gpgkey=http://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg
+     http://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+     EOF
+   #3.2 安装  
+     yum install -y kubelet kubeadm kubectl
+   #3.3
+     systemctl enable kubelet && systemctl start kubelet
+   #3.4 检查版本
+      kubelet --version
+      Kubernetes v1.20.5
+
+
+
+4.初始化master
+    #4.2 设置环境变量
+    export APISERVER_NAME=kk88ss.k.com
+    export POD_SUBNET=10.100.0.1/16
+    #4.1 安装
+       一键安装：curl -sSL https://kuboard.cn/install-script/v1.20.x/init_master.sh | sh -s 1.20.5
+       如果访问不到源
+       可以做如下修改：
+           wget：https://kuboard.cn/install-script/v1.20.x/init_master.sh
+           修改脚本中 ./kubeadm-config.yaml  内的 imageRepository 的值  默认是：registry.aliyuncs.com/k8sxio     修改为：k8s.gcr.io
+           我在测试中发现 registry.aliyuncs.com/k8sxio 拉去不到，就做了修改
+           脚本中 删除：”安装 calico 网络插件“ 这一部分，我本地测试发现 安装 calico pod不能访问外网，就修改成了flannel，有待研究
+           安装：./init_master.sh 1.20.5
+     #4.3 查看结果
+       kubectl get pods -n kube-system
+       等到所以pods启动
+
+       
+   
+   
+   
